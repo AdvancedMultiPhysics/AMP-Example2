@@ -4,6 +4,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 
 # Initialize the project
 PROJECT( ${PROJ} LANGUAGES CXX )
+SET( CMAKE_CXX_EXTENSIONS OFF )
 
 
 # Prevent users from building in place
