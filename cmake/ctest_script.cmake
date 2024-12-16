@@ -1,8 +1,8 @@
 # ctest script for building, running, and submitting the test results 
 # Usage:  ctest -S script,build
-#   build = debug / optimized / valgrind
+#   build = debug / optimized / valgrind / continuous
 # Note: this test will use use the number of processors defined in the variable N_PROCS,
-#   the enviornmental variable N_PROCS, or the number of processors availible (if not specified)
+#   the environmental variable N_PROCS, or the number of processors available (if not specified)
 
 
 # Set the Project variables
@@ -41,17 +41,28 @@ IF ( NOT CMAKE_MAKE_PROGRAM )
 ENDIF()
 
 
+# Set default options
+SET( CTEST_BUILD_NAME "${PROJ}" )
+SET( CMAKE_BUILD_TYPE "Release" )
+SET( CTEST_COVERAGE_COMMAND )
+SET( ENABLE_GCOV "false" )
+SET( USE_VALGRIND FALSE )
+SET( USE_VALGRIND_MATLAB FALSE )
+SET( CTEST_DASHBOARD "Nightly" )
+
+
 # Check that we specified the build type to run
 IF( NOT CTEST_SCRIPT_ARG )
-    MESSAGE(FATAL_ERROR "No build specified: ctest -S /path/to/script,build (debug/optimized/valgrind")
+    MESSAGE(FATAL_ERROR "No build specified: ctest -S /path/to/script,build (debug/optimized/valgrind/continuous")
+ELSEIF( ${CTEST_SCRIPT_ARG} STREQUAL "continuous" )
+    SET( CTEST_DASHBOARD "Continuous" )
 ELSEIF( ${CTEST_SCRIPT_ARG} STREQUAL "debug" )
     SET( CTEST_BUILD_NAME "${PROJ}-debug" )
     SET( CMAKE_BUILD_TYPE "Debug" )
-    SET( USE_VALGRIND FALSE )
+    SET( CTEST_COVERAGE_COMMAND ${COVERAGE_COMMAND} )
+    SET( ENABLE_GCOV "true" )
 ELSEIF( (${CTEST_SCRIPT_ARG} STREQUAL "optimized") OR (${CTEST_SCRIPT_ARG} STREQUAL "opt") OR (${CTEST_SCRIPT_ARG} STREQUAL "weekly") )
     SET( CTEST_BUILD_NAME "${PROJ}-opt" )
-    SET( CMAKE_BUILD_TYPE "Release" )
-    SET( USE_VALGRIND FALSE )
 ELSEIF( ${CTEST_SCRIPT_ARG} STREQUAL "valgrind" )
     SET( CTEST_BUILD_NAME "${PROJ}-valgrind" )
     SET( CMAKE_BUILD_TYPE "Debug" )
@@ -59,10 +70,13 @@ ELSEIF( ${CTEST_SCRIPT_ARG} STREQUAL "valgrind" )
 ELSEIF( ${CTEST_SCRIPT_ARG} STREQUAL "doc" )
     RETURN()
 ELSE()
-    MESSAGE(FATAL_ERROR "Invalid build (${CTEST_SCRIPT_ARG}): ctest -S /path/to/script,build (debug/opt/valgrind")
+    MESSAGE(FATAL_ERROR "Invalid build (${CTEST_SCRIPT_ARG}): ctest -S /path/to/script,build (debug/opt/valgrind/continuous")
 ENDIF()
 IF ( BUILDNAME_POSTFIX )
     SET( CTEST_BUILD_NAME "${CTEST_BUILD_NAME}-${BUILDNAME_POSTFIX}" )
+ENDIF()
+IF ( NOT COVERAGE_COMMAND )
+    SET( ENABLE_GCOV "false" )
 ENDIF()
 
 
@@ -98,7 +112,6 @@ SET( CTEST_NIGHTLY_START_TIME ${NIGHTLY_START_TIME} )
 SET( CTEST_PROJECT_NAME "${PROJ}" )
 SET( CTEST_SOURCE_DIRECTORY "${${PROJ}_SOURCE_DIR}" )
 SET( CTEST_BINARY_DIRECTORY "." )
-SET( CTEST_DASHBOARD "Nightly" )
 SET( CTEST_CUSTOM_MAXIMUM_NUMBER_OF_ERRORS 500 )
 SET( CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 500 )
 SET( CTEST_CUSTOM_MAXIMUM_PASSED_TEST_OUTPUT_SIZE 10000 )
